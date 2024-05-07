@@ -1,2 +1,2 @@
 # AutoCoder
-Autocoder is na automated code generation tool
+Autocoder is an automated code generation tool
