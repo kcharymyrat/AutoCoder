@@ -1,1 +1,13 @@
+name: Workflow Name
+on: [push]
 
+jobs:
+  say_hello:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout Code
+        run: echo "$(<hello.txt)"
+
+      - name: Greeting Message
+        # Write the command here
