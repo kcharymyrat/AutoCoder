@@ -17,11 +17,16 @@ fetch_issue_details() {
 
 # Function to send prompt to the ChatGPT model (OpenAI API)
 send_prompt_to_chatgpt() {
-    curl -s -X POST "https://api.openai.com/v1/chat/completions" \
+    response=$(curl -s -X POST "https://api.openai.com/v1/chat/completions" \
          -H "Authorization: Bearer $OPENAI_API_KEY" \
          -H "Content-Type: application/json" \
-         -d "{\"model\": \"gpt-3.5-turbo\", \"messages\": $MESSAGES_JSON, \"max_tokens\": 300}" || true
-         # The || true ensures that the script does not exit if the curl command fails
+         -d "{\"model\": \"gpt-3.5-turbo\", \"messages\": $MESSAGES_JSON, \"max_tokens\": 300}" || true)
+    if [[ -z "$response" ]]; then
+        echo "Error: No response received from the OpenAI API."
+        exit 1
+    else
+        echo "Response from OpenAI API: $response"
+    fi
 }
 
 # Function to save code snippet to file
@@ -40,8 +45,10 @@ RESPONSE=$(fetch_issue_details)
 ISSUE_BODY=$(echo "$RESPONSE" | jq -r .body)
 
 if [[ -z "$ISSUE_BODY" ]]; then
-    echo 'Issue body is empty or not found in the response.'
+    echo 'Error: Issue body is empty or not found in the response from GitHub API.'
     exit 1
+else
+    echo "Issue body: $ISSUE_BODY"
 fi
 
 # Define clear, additional instructions for GPT regarding the response format
@@ -56,18 +63,13 @@ MESSAGES_JSON=$(jq -n --arg body "$FULL_PROMPT" '[{"role": "user", "content": $b
 # Send the prompt to the ChatGPT model
 RESPONSE=$(send_prompt_to_chatgpt)
 
-if [[ -z "$RESPONSE" ]]; then
-    echo "No response received from the OpenAI API."
-    exit 1
-fi
-
 # Extract the JSON dictionary from the response
 # Make sure that the extracted content is valid JSON
 FILES_JSON=$(echo "$RESPONSE" | jq -e '.choices[0].message.content | fromjson' 2> /dev/null || true)
 # The || true ensures that the script does not exit if jq command fails
 
 if [[ -z "$FILES_JSON" ]]; then
-    echo "No valid JSON dictionary found in the response or the response was not valid JSON. Please rerun the job."
+    echo "Error: No valid JSON dictionary found in the response or the response was not valid JSON. Please rerun the job."
     exit 1
 fi
 
