@@ -20,7 +20,8 @@ send_prompt_to_chatgpt() {
     curl -s -X POST "https://api.openai.com/v1/chat/completions" \
          -H "Authorization: Bearer $OPENAI_API_KEY" \
          -H "Content-Type: application/json" \
-         -d "{\"model\": \"gpt-3.5-turbo\", \"messages\": $MESSAGES_JSON, \"max_tokens\": 300}"
+         -d "{\"model\": \"gpt-3.5-turbo\", \"messages\": $MESSAGES_JSON, \"max_tokens\": 300}" || true
+         # The || true ensures that the script does not exit if the curl command fails
 }
 
 # Function to save code snippet to file
@@ -62,7 +63,8 @@ fi
 
 # Extract the JSON dictionary from the response
 # Make sure that the extracted content is valid JSON
-FILES_JSON=$(echo "$RESPONSE" | jq -e '.choices[0].message.content | fromjson' 2> /dev/null)
+FILES_JSON=$(echo "$RESPONSE" | jq -e '.choices[0].message.content | fromjson' 2> /dev/null || true)
+# The || true ensures that the script does not exit if jq command fails
 
 if [[ -z "$FILES_JSON" ]]; then
     echo "No valid JSON dictionary found in the response or the response was not valid JSON. Please rerun the job."
