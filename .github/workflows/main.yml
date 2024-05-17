@@ -43,13 +43,6 @@ jobs:
         git add .
         git commit -m "Add code snippets for issue #${{ github.event.issue.number }}"
     
-    - name: Push changes
-      run: |
-        BRANCH_NAME="autocoder-branch-${{ github.event.issue.number }}"
-        git push origin $BRANCH_NAME
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
     - name: Create pull request
       uses: peter-evans/create-pull-request@v6
       with:
