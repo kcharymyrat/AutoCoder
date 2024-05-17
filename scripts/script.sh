@@ -30,6 +30,6 @@ mkdir -p "$ARTIFACT_DIR"
 JSON_FILE="$ARTIFACT_DIR/random_data.json"
 echo "$RANDOM_JSON" > "$JSON_FILE"
 
-# List all the files ensuring to list directories and files recursively
+# Debug: List all files ensuring to list directories and files recursively
 echo "Listing all files in $ARTIFACT_DIR:"
 find "$ARTIFACT_DIR"
