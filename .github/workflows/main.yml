@@ -33,20 +33,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit generated files
+      - name: Commit files
         run: |
-          git checkout -b autocoder-branch-${{ github.event.issue.number }}
-          git add ./autocoder-artifact/*
-          git commit -m "Add generated code for issue #${{ github.event.issue.number }}"
+          git add .
+          git commit -m "Add code snippets from issue #${{ github.event.issue.number }}" -a || echo "No changes to commit"
 
-      - name: Push changes
-        run: git push origin autocoder-branch-${{ github.event.issue.number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+      - name: Create pull request
+        if: success()
+        uses: peter-evans/create-pull-request@v6
         with:
-          base: main
-          branch: autocoder-branch-${{ github.event.issue.number }}
-          labels: autocoder-bot
+          commit-message: "Add code snippets from issue #${{ github.event.issue.number }}"
+          title: "Add code snippets from issue #${{ github.event.issue.number }}"
+          body: |
+              This pull request adds code snippets from issue #${{ github.event.issue.number }}.
+          branch: "autocoder-branch-${{ github.event.issue.number }}"
+          base: "main"
+          labels: "autocoder-bot"
+          reviewers: "autocoder-bot"
+          assignees: "autocoder-bot"
