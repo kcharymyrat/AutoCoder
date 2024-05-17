@@ -1,4 +1,4 @@
-name: Generate Code using ChatGPT and script.sh
+name: Issue Interaction with ChatGPT
 
 on:
   issues:
@@ -7,14 +7,23 @@ on:
       - reopened
       - labeled
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  generate-code:
+  interact-with-chatgpt:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set git user
+        run: |
+          git config --global user.name "autocoder-bot"
+          git config --global user.email "actions@github.com"
 
       - name: Set permissions for script.sh
         run: chmod +x ./scripts/script.sh
@@ -24,17 +33,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload generated files as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: autocoder-artifact
-          path: ./autocoder-artifact/*
+      - name: Commit generated files
+        run: |
+          git checkout -b autocoder-branch-${{ github.event.issue.number }}
+          git add ./autocoder-artifact/*
+          git commit -m "Add generated code for issue #${{ github.event.issue.number }}"
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: autocoder-artifact
-          path: ./autocoder-artifact
+      - name: Push changes
+        run: git push origin autocoder-branch-${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: List files in the artifact
-        run: ls -R ./autocoder-artifact
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          base: main
+          branch: autocoder-branch-${{ github.event.issue.number }}
+          labels: autocoder-bot
